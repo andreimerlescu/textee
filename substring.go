@@ -1,4 +1,4 @@
-package go_textee
+package textee
 
 // Len is part of sort.Interface.
 func (sq SortedStringQuantities) Len() int {

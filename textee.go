@@ -1,4 +1,4 @@
-package go_textee
+package textee
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	gematria "github.com/andreimerlescu/go-gematria"
+	"github.com/andreimerlescu/gematria"
 )
 
 func NewTextee(opts ...string) (*Textee, error) {
@@ -37,13 +37,16 @@ func NewTextee(opts ...string) (*Textee, error) {
 		return nil, err
 	}
 	tt := &Textee{
-		Input:         input,
-		Gematria:      gem,
-		Substrings:    make(map[string]*atomic.Int32),
-		Gematrias:     make(map[string]gematria.Gematria),
-		ScoresEnglish: make(map[uint][]string),
-		ScoresJewish:  make(map[uint][]string),
-		ScoresSimple:  make(map[uint][]string),
+		Input:          input,
+		Gematria:       gem,
+		Substrings:     make(map[string]*atomic.Int32),
+		Gematrias:      make(map[string]gematria.Gematria),
+		ScoresEnglish:  make(map[uint64][]string),
+		ScoresJewish:   make(map[uint64][]string),
+		ScoresSimple:   make(map[uint64][]string),
+		ScoresMystery:  make(map[uint64][]string),
+		ScoresEights:   make(map[uint64][]string),
+		ScoresMajestic: make(map[uint64][]string),
 	}
 	payload := strings.Join(opts, " ")
 	tt, err = tt.ParseString(payload)
@@ -108,22 +111,22 @@ func (tt *Textee) String() string {
 		return ""
 	}
 	hasGematria := len(tt.ScoresEnglish) > 0 || len(tt.ScoresJewish) > 0 || len(tt.ScoresSimple) > 0
-	var output string
+	var output strings.Builder
 	for _, data := range tt.SortedSubstrings() {
-		hasGematria := hasGematria
-		if hasGematria {
-			addition := fmt.Sprintf("\"%v\": %d [English %d] [Jewish %d] [Simple %d]\n",
+		if hasGematria := hasGematria; hasGematria {
+			output.WriteString(fmt.Sprintf("\"%v\": %d [English %d] [Jewish %d] [Simple %d] [Mystery %d] [Majestic %d] [Eights %d]\n",
 				data.Substring, data.Quantity,
 				tt.Gematrias[data.Substring].English,
 				tt.Gematrias[data.Substring].Jewish,
-				tt.Gematrias[data.Substring].Simple)
-			output = output + addition
+				tt.Gematrias[data.Substring].Simple,
+				tt.Gematrias[data.Substring].Mystery,
+				tt.Gematrias[data.Substring].Majestic,
+				tt.Gematrias[data.Substring].Eights))
 		} else {
-			addition := fmt.Sprintf("\"%v\": %d\n", data.Substring, data.Quantity)
-			output = output + addition
+			output.WriteString(fmt.Sprintf("\"%v\": %d\n", data.Substring, data.Quantity))
 		}
 	}
-	return output
+	return output.String()
 }
 
 func (tt *Textee) SortedSubstrings() SortedStringQuantities {
@@ -144,9 +147,12 @@ func (tt *Textee) CalculateGematria() (*Textee, error) {
 	tt.mu.Lock()
 	defer tt.mu.Unlock()
 	substrings := tt.Substrings
-	englishResults := make(map[uint][]string)
-	jewishResults := make(map[uint][]string)
-	simpleResults := make(map[uint][]string)
+	englishResults := make(map[uint64][]string)
+	jewishResults := make(map[uint64][]string)
+	simpleResults := make(map[uint64][]string)
+	mysteryResults := make(map[uint64][]string)
+	majesticResults := make(map[uint64][]string)
+	eightsResults := make(map[uint64][]string)
 	errorCounter := atomic.Int32{}
 	errs := make([]error, 0)
 	for substring, _ := range substrings {
@@ -159,6 +165,9 @@ func (tt *Textee) CalculateGematria() (*Textee, error) {
 		englishResults[gemscore.English] = append(englishResults[gemscore.English], substring)
 		jewishResults[gemscore.Jewish] = append(jewishResults[gemscore.Jewish], substring)
 		simpleResults[gemscore.Simple] = append(simpleResults[gemscore.Simple], substring)
+		mysteryResults[gemscore.Mystery] = append(mysteryResults[gemscore.Mystery], substring)
+		majesticResults[gemscore.Majestic] = append(majesticResults[gemscore.Majestic], substring)
+		eightsResults[gemscore.Eights] = append(eightsResults[gemscore.Eights], substring)
 		if tt.Gematrias == nil {
 			tt.Gematrias = make(map[string]gematria.Gematria)
 		}
@@ -171,8 +180,14 @@ func (tt *Textee) CalculateGematria() (*Textee, error) {
 	tt.ScoresEnglish = englishResults
 	tt.ScoresJewish = jewishResults
 	tt.ScoresSimple = simpleResults
+	tt.ScoresMystery = mysteryResults
+	tt.ScoresMajestic = majesticResults
+	tt.ScoresEights = eightsResults
 	englishResults = nil
 	jewishResults = nil
 	simpleResults = nil
+	mysteryResults = nil
+	majesticResults = nil
+	eightsResults = nil
 	return tt, nil
 }

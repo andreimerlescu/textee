@@ -1,5 +1,5 @@
-github.com/andreimerlescu/go-gematria v0.0.1 h1:aOaiS3FuSVXKUUacOxEyFexBklMyBku+rHUbwzKoODo=
-github.com/andreimerlescu/go-gematria v0.0.1/go.mod h1:QtP1M7h2S2ukGSPROgPMxcmkVlLvoSTlJBhrkbitbjM=
+github.com/andreimerlescu/gematria v1.0.0 h1:doQbeLl/tRGBcJe05wXiAHWWimqeREXp8PUQWR1744U=
+github.com/andreimerlescu/gematria v1.0.0/go.mod h1:XU0Qa8gBi7pEqykfuIpkqET/3TIgdrxv1dEowwufOR4=
 github.com/andreimerlescu/go-sema v0.0.1 h1:+PijxhpaJXDDApRGnOOln23Cddb68T9+wkJtKFMcTuc=
 github.com/andreimerlescu/go-sema v0.0.1/go.mod h1:m7krZFMBkrhm0P/4vVLoeeqQMv0m9sC4r9HfjLGxA7k=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

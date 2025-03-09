@@ -1,4 +1,4 @@
-package go_textee
+package textee
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	gematria "github.com/andreimerlescu/go-gematria"
+	"github.com/andreimerlescu/gematria"
 	sema "github.com/andreimerlescu/go-sema"
 )
 
@@ -32,14 +32,17 @@ type ParseError error
 type CleanError error
 
 type Textee struct {
-	mu            sync.RWMutex
-	Input         string                       `json:"i"`
-	Gematria      gematria.Gematria            `json:"g"`
-	Substrings    map[string]*atomic.Int32     `json:"s"` // map[Substring]*atomic.Int32
-	Gematrias     map[string]gematria.Gematria `json:"mg"`
-	ScoresEnglish map[uint][]string            `json:"ge"`
-	ScoresJewish  map[uint][]string            `json:"gj"`
-	ScoresSimple  map[uint][]string            `json:"gs"`
+	mu             sync.RWMutex
+	Input          string                       `json:"in"`
+	Gematria       gematria.Gematria            `json:"gem"`
+	Substrings     map[string]*atomic.Int32     `json:"subs"` // map[Substring]*atomic.Int32
+	Gematrias      map[string]gematria.Gematria `json:"gems"`
+	ScoresEnglish  map[uint64][]string          `json:"sen"`
+	ScoresJewish   map[uint64][]string          `json:"sje"`
+	ScoresSimple   map[uint64][]string          `json:"ssi"`
+	ScoresMystery  map[uint64][]string          `json:"smy"`
+	ScoresMajestic map[uint64][]string          `json:"smj"`
+	ScoresEights   map[uint64][]string          `json:"sei"`
 }
 
 type SubstringQuantity struct {

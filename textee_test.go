@@ -1,10 +1,10 @@
-package go_textee
+package textee
 
 import (
 	"reflect"
 	"testing"
 
-	gematria "github.com/andreimerlescu/go-gematria"
+	"github.com/andreimerlescu/gematria"
 )
 
 func TestTextee_ParseString(t *testing.T) {
