@@ -96,7 +96,7 @@ final results are then sorted using the [sort.Interface](https://pkg.go.dev/sort
 You'll need to include this project in your workspace.
 
 ```bash
-go get -u github.com/andreimerlescu/go-textee
+go get -u github.com/andreimerlescu/textee
 ```
 
 ## Dependencies
@@ -115,7 +115,7 @@ import (
     "os"
     "errors"
 
-    textee "github.com/andreimerlescu/go-textee"
+    "github.com/andreimerlescu/textee"
 )
 
 const inputString = `All right let's move from this point on 16 March 84, let's move in time to our second location which is a specific building near where you are now. Are you ready? Just a minute. All. right, I will wait. All right, move now from this area to the front ground level of the building known as the Menara Building, to the front of, on the ground, the Menara Building.`

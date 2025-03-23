@@ -3,20 +3,12 @@ package textee
 import (
 	"errors"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/andreimerlescu/gematria"
-	sema "github.com/andreimerlescu/go-sema"
 )
-
-type ITextee interface {
-	ParseString(input string) *Textee
-	SortedSubstrings() SortedStringQuantities
-	CalculateGematria() *Textee
-}
 
 var (
 	ErrEmptyInput    ArgumentError = errors.New("empty input")
@@ -52,10 +44,8 @@ type SubstringQuantity struct {
 
 type SortedStringQuantities []SubstringQuantity
 
-var regCleanSubstring *regexp.Regexp
-var regFindSentences *regexp.Regexp
-
-var sem = sema.New(runtime.GOMAXPROCS(0))
+var regCleanSubstring = regexp.MustCompile(`[^a-zA-Z0-9\s]`)
+var regFindSentences = regexp.MustCompile(`(?m)([^.!?]*[.!?])(?:\s|$)`)
 
 // stringToSentenceSlice splits text into sentences, considering abbreviations.
 func stringToSentenceSlice(text string) ([]string, error) {
@@ -78,5 +68,6 @@ func cleanSubstring(word string) (string, error) {
 	if regCleanSubstring == nil {
 		return "", ErrRegexpMissing
 	}
+	word = strings.TrimSpace(word)
 	return regCleanSubstring.ReplaceAllString(word, ""), nil
 }

@@ -3,7 +3,6 @@ package textee
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -12,26 +11,12 @@ import (
 	"github.com/andreimerlescu/gematria"
 )
 
-func NewTextee(opts ...string) (*Textee, error) {
-	if opts == nil {
+func NewTextee(in ...string) (*Textee, error) {
+	if in == nil {
 		return nil, ErrEmptyInput
 	}
 
-	// ensure regexp clean string compiles
-	var cleanRegErr RegexpError
-	regCleanSubstring, cleanRegErr = regexp.Compile(`[^a-zA-Z0-9\s]`)
-	if cleanRegErr != nil {
-		return nil, errors.Join(ErrRegexpMissing, cleanRegErr)
-	}
-
-	// ensure regexp find sentences compiles
-	var findRegErr RegexpError
-	regFindSentences, findRegErr = regexp.Compile(`(?m)([^.!?]*[.!?])(?:\s|$)`)
-	if findRegErr != nil {
-		return nil, errors.Join(ErrRegexpMissing, findRegErr)
-	}
-
-	input := strings.Join(opts, " ")
+	input := strings.Join(in, " ")
 	gem, err := gematria.NewGematria(input)
 	if err != nil {
 		return nil, err
@@ -48,8 +33,12 @@ func NewTextee(opts ...string) (*Textee, error) {
 		ScoresEights:   make(map[uint64][]string),
 		ScoresMajestic: make(map[uint64][]string),
 	}
-	payload := strings.Join(opts, " ")
+	payload := strings.Join(in, " ")
 	tt, err = tt.ParseString(payload)
+	if err != nil {
+		return nil, errors.Join(ErrBadParsing, err)
+	}
+	tt, err = tt.CalculateGematria()
 	if err != nil {
 		return nil, errors.Join(ErrBadParsing, err)
 	}
@@ -83,6 +72,7 @@ func (tt *Textee) ParseString(input string) (*Textee, error) {
 						continue
 					}
 					cleanedSubstring = strings.ToLower(cleanedSubstring)
+					cleanedSubstring = strings.TrimSpace(cleanedSubstring)
 
 					if cleanedSubstring != "" {
 						tt.mu.Lock()
@@ -146,6 +136,9 @@ func (tt *Textee) SortedSubstrings() SortedStringQuantities {
 func (tt *Textee) CalculateGematria() (*Textee, error) {
 	tt.mu.Lock()
 	defer tt.mu.Unlock()
+	if tt.Gematrias == nil {
+		tt.Gematrias = make(map[string]gematria.Gematria)
+	}
 	substrings := tt.Substrings
 	englishResults := make(map[uint64][]string)
 	jewishResults := make(map[uint64][]string)
@@ -156,6 +149,7 @@ func (tt *Textee) CalculateGematria() (*Textee, error) {
 	errorCounter := atomic.Int32{}
 	errs := make([]error, 0)
 	for substring, _ := range substrings {
+		substring = strings.TrimSpace(substring)
 		gemscore, err := gematria.NewGematria(substring)
 		if err != nil {
 			errorCounter.Add(1)
@@ -168,9 +162,6 @@ func (tt *Textee) CalculateGematria() (*Textee, error) {
 		mysteryResults[gemscore.Mystery] = append(mysteryResults[gemscore.Mystery], substring)
 		majesticResults[gemscore.Majestic] = append(majesticResults[gemscore.Majestic], substring)
 		eightsResults[gemscore.Eights] = append(eightsResults[gemscore.Eights], substring)
-		if tt.Gematrias == nil {
-			tt.Gematrias = make(map[string]gematria.Gematria)
-		}
 		tt.Gematrias[substring] = gemscore
 	}
 	if errorCounter.Load() > 0 {
